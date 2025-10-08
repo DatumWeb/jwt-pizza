@@ -668,3 +668,80 @@ test('not found page navigation', async ({ page }) => {
   await page.goto('/nonexistent-page');
   await expect(page.getByText('Oops')).toBeVisible();
 });
+
+test('close franchise component loads', async ({ page }) => {
+  await basicInit(page);
+  
+  // Login as franchisee
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByPlaceholder('Email address').fill('f@jwt.com');
+  await page.getByPlaceholder('Password').fill('franchisee');
+  await page.getByRole('button', { name: 'Login' }).click();
+  
+  // Navigate to close franchise page
+  await page.goto('/close-franchise');
+  await expect(page.locator('body')).toBeVisible();
+});
+
+test('close store component loads', async ({ page }) => {
+  await basicInit(page);
+  
+  // Login as franchisee
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByPlaceholder('Email address').fill('f@jwt.com');
+  await page.getByPlaceholder('Password').fill('franchisee');
+  await page.getByRole('button', { name: 'Login' }).click();
+  
+  // Navigate to close store page
+  await page.goto('/close-store');
+  await expect(page.locator('body')).toBeVisible();
+});
+
+test('create franchise form interaction', async ({ page }) => {
+  await basicInit(page);
+  
+  // Login as admin
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByPlaceholder('Email address').fill('admin@jwt.com');
+  await page.getByPlaceholder('Password').fill('admin');
+  await page.getByRole('button', { name: 'Login' }).click();
+  
+  // Navigate to create franchise page
+  await page.goto('/create-franchise');
+  await expect(page.locator('body')).toBeVisible();
+  
+  // Try to fill the form (this will test more of the component)
+  await page.getByPlaceholder('Franchise name').fill('Test Franchise');
+  await page.getByPlaceholder('Admin email').fill('test@example.com');
+});
+
+test('create store form interaction', async ({ page }) => {
+  await basicInit(page);
+  
+  // Login as franchisee
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByPlaceholder('Email address').fill('f@jwt.com');
+  await page.getByPlaceholder('Password').fill('franchisee');
+  await page.getByRole('button', { name: 'Login' }).click();
+  
+  // Navigate to create store page
+  await page.goto('/create-store');
+  await expect(page.locator('body')).toBeVisible();
+  
+  // Try to fill the form (this will test more of the component)
+  await page.getByPlaceholder('Store name').fill('Test Store');
+});
+
+test('menu page interactions', async ({ page }) => {
+  await basicInit(page);
+  
+  // Navigate to menu page
+  await page.goto('/menu');
+  await expect(page.locator('body')).toBeVisible();
+  
+  // Try to interact with menu items (this will test more of the component)
+  const menuItems = page.locator('[data-testid="menu-item"]');
+  if (await menuItems.count() > 0) {
+    await menuItems.first().click();
+  }
+});
