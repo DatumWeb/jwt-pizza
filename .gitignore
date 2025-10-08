@@ -5,3 +5,7 @@ config.js
 coverage
 dist
 **/.vite
+.nyc_output
+playwright-report
+test-results
+tests/requestsMade.txt
