@@ -745,3 +745,31 @@ test('menu page interactions', async ({ page }) => {
     await menuItems.first().click();
   }
 });
+
+test('payment page form interactions', async ({ page }) => {
+  await basicInit(page);
+  
+  // Navigate to payment page
+  await page.goto('/payment');
+  await expect(page.locator('body')).toBeVisible();
+  
+  // Try to fill payment form fields
+  const inputs = page.locator('input');
+  if (await inputs.count() > 0) {
+    await inputs.first().fill('test');
+  }
+});
+
+test('delivery page form interactions', async ({ page }) => {
+  await basicInit(page);
+  
+  // Navigate to delivery page
+  await page.goto('/delivery');
+  await expect(page.locator('body')).toBeVisible();
+  
+  // Try to fill delivery form fields
+  const inputs = page.locator('input');
+  if (await inputs.count() > 0) {
+    await inputs.first().fill('test');
+  }
+});
