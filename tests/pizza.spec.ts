@@ -56,6 +56,16 @@ async function basicInit(page: Page) {
     await route.fulfill({ json: franchiseRes });
   });
 
+  // Mock store endpoint for dropdown options
+  await page.route('*/**/api/store', async (route: Route) => {
+    const storeRes = [
+      { id: 6, name: 'Lehi', totalRevenue: 0.1 },
+      { id: 7, name: 'Springville', totalRevenue: 0.05 },
+    ];
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({ json: storeRes });
+  });
+
   // Mock creating a new store
   await page.route('*/**/api/franchise/5/store', async (route: Route) => {
     const storeReq = route.request().postDataJSON();
@@ -67,6 +77,7 @@ async function basicInit(page: Page) {
     expect(route.request().method()).toBe('POST');
     await route.fulfill({ json: storeRes });
   });
+
 
   // Mock the register/login endpoint - handle POST (register) and PUT (login)
   await page.route('*/**/api/auth', async (route: Route) => {
@@ -522,7 +533,7 @@ test('menu page edge cases', async ({ page }) => {
 
 test('create store page navigation', async ({ page }) => {
   await basicInit(page);
-  
+
   // Mock the franchise endpoint for the franchisee
   await page.route('*/**/api/franchise/3', async (route: Route) => {
     const franchiseRes = [{
@@ -537,19 +548,19 @@ test('create store page navigation', async ({ page }) => {
     expect(route.request().method()).toBe('GET');
     await route.fulfill({ json: franchiseRes });
   });
-  
+
   // Login as franchisee
   await page.getByRole('link', { name: 'Login' }).click();
   await page.getByPlaceholder('Email address').fill('f@jwt.com');
   await page.getByPlaceholder('Password').fill('franchisee');
   await page.getByRole('button', { name: 'Login' }).click();
-  
+
   // Go to franchise dashboard
   await page.getByRole('link', { name: 'Franchise' }).first().click();
-  
+
   // Click create store button
   await page.getByRole('button', { name: 'Create store' }).click();
-  
+
   // Verify we're on the create store page
   await expect(page.getByText('Create store')).toBeVisible();
 });
