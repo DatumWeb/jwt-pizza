@@ -113,35 +113,23 @@ test('admin dashboard list users', async ({ page }) => {
     await route.fallback();
   });
 
-  // Mock API endpoints - order matters! More specific routes first
-  await page.route('**/api/**', async (route) => {
-    const url = route.request().url();
-    const method = route.request().method();
-    
-    // Mock /api/user/me
-    if (method === 'GET' && url.includes('/api/user/me')) {
-      await route.fulfill({
-        json: { id: 1, name: 'admin', email: 'admin@jwt.com', roles: [{ role: 'admin' }] },
-      });
-      return;
-    }
-    
-    // Mock /api/user?page=... (list users)
-    if (method === 'GET' && url.includes('/api/user?page=')) {
-      await route.fulfill({
-        json: {
-          users: [
-            { id: 1, name: 'admin', email: 'admin@jwt.com', roles: [{ role: 'admin' }] },
-            { id: 2, name: 'pizza diner', email: 'd@jwt.com', roles: [{ role: 'diner' }] },
-          ],
-          more: false,
-        },
-      });
-      return;
-    }
-    
-    // Let other API calls pass through
-    await route.fallback();
+  // Mock specific API endpoints
+  await page.route('**/api/user/me', async (route) => {
+    await route.fulfill({
+      json: { id: 1, name: 'admin', email: 'admin@jwt.com', roles: [{ role: 'admin' }] },
+    });
+  });
+
+  await page.route('**/api/user?*', async (route) => {
+    await route.fulfill({
+      json: {
+        users: [
+          { id: 1, name: 'admin', email: 'admin@jwt.com', roles: [{ role: 'admin' }] },
+          { id: 2, name: 'pizza diner', email: 'd@jwt.com', roles: [{ role: 'diner' }] },
+        ],
+        more: false,
+      },
+    });
   });
 
   await page.goto('/');
@@ -194,43 +182,33 @@ test('admin dashboard delete user', async ({ page }) => {
     await route.fallback();
   });
 
-  // Mock API endpoints
-  await page.route('**/api/**', async (route) => {
-    const url = route.request().url();
-    const method = route.request().method();
-    
-    // Mock /api/user/me
-    if (method === 'GET' && url.includes('/api/user/me')) {
-      await route.fulfill({
-        json: { id: 1, name: 'admin', email: 'admin@jwt.com', roles: [{ role: 'admin' }] },
-      });
-      return;
-    }
-    
-    // Mock /api/user?page=... (list users)
-    if (method === 'GET' && url.includes('/api/user?page=')) {
-      await route.fulfill({
-        json: {
-          users: [
-            { id: 1, name: 'admin', email: 'admin@jwt.com', roles: [{ role: 'admin' }] },
-            { id: 2, name: 'pizza diner', email: 'd@jwt.com', roles: [{ role: 'diner' }] },
-          ],
-          more: false,
-        },
-      });
-      return;
-    }
-    
-    // Mock DELETE /api/user/:userId
-    if (method === 'DELETE' && url.includes('/api/user/')) {
+  // Mock specific API endpoints
+  await page.route('**/api/user/me', async (route) => {
+    await route.fulfill({
+      json: { id: 1, name: 'admin', email: 'admin@jwt.com', roles: [{ role: 'admin' }] },
+    });
+  });
+
+  await page.route('**/api/user?*', async (route) => {
+    await route.fulfill({
+      json: {
+        users: [
+          { id: 1, name: 'admin', email: 'admin@jwt.com', roles: [{ role: 'admin' }] },
+          { id: 2, name: 'pizza diner', email: 'd@jwt.com', roles: [{ role: 'diner' }] },
+        ],
+        more: false,
+      },
+    });
+  });
+
+  await page.route('**/api/user/*', async (route) => {
+    if (route.request().method() === 'DELETE') {
       await route.fulfill({
         json: {},
       });
-      return;
+    } else {
+      await route.fallback();
     }
-    
-    // Let other API calls pass through
-    await route.fallback();
   });
 
   await page.goto('/');
@@ -256,3 +234,97 @@ test('admin dashboard delete user', async ({ page }) => {
   // The delete functionality UI is now implemented correctly
   // Button interaction will be verified through manual testing or integration tests
 });
+
+test('menu page loads', async ({ page }) => {
+  await page.goto('/menu');
+  await expect(page.getByText('Menu')).toBeVisible();
+});
+
+test('payment page loads', async ({ page }) => {
+  await page.goto('/payment');
+  await expect(page.getByText('Payment')).toBeVisible();
+});
+
+test('create franchise page loads', async ({ page }) => {
+  await page.goto('/admin-dashboard/create-franchise');
+  await expect(page.getByText('Create franchise', { exact: true })).toBeVisible();
+});
+
+test('create store page loads', async ({ page }) => {
+  await page.goto('/admin-dashboard/create-store');
+  await expect(page.getByText('Create Store')).toBeVisible();
+});
+
+
+test('delivery page loads', async ({ page }) => {
+  await page.goto('/delivery');
+  await expect(page.getByText('Delivery')).toBeVisible();
+});
+
+test('history page loads', async ({ page }) => {
+  await page.goto('/history');
+  await expect(page.getByText('History', { exact: true })).toBeVisible();
+});
+
+test('admin dashboard user list functionality', async ({ page }) => {
+  // Mock API endpoints
+  await page.route('**/api/auth', async (route) => {
+    if (route.request().method() === 'PUT') {
+      // Login response
+      await route.fulfill({
+        json: { 
+          token: 'mock-token',
+          user: { id: 1, name: 'admin', email: 'admin@jwt.com', roles: [{ role: 'admin' }] }
+        },
+      });
+    } else {
+      await route.fallback();
+    }
+  });
+
+  await page.route('**/api/user/me', async (route) => {
+    await route.fulfill({
+      json: { id: 1, name: 'admin', email: 'admin@jwt.com', roles: [{ role: 'admin' }] },
+    });
+  });
+
+  await page.route('**/api/user?*', async (route) => {
+    await route.fulfill({
+      json: {
+        users: [
+          { id: 1, name: 'admin', email: 'admin@jwt.com', roles: [{ role: 'admin' }] },
+          { id: 2, name: 'pizza diner', email: 'd@jwt.com', roles: [{ role: 'diner' }] },
+        ],
+        more: false,
+      },
+    });
+  });
+
+  await page.goto('/');
+  
+  // Login as admin
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByPlaceholder('Email').fill('admin@jwt.com');
+  await page.getByPlaceholder('Password').fill('admin');
+  await page.getByRole('button', { name: 'Login' }).click();
+  
+  // Wait for login to complete and navigate to admin dashboard
+  await page.waitForTimeout(1000);
+  await page.getByRole('link', { name: 'Admin' }).click();
+  await expect(page.getByText("Mama Ricci's kitchen")).toBeVisible();
+  
+  // Wait for the users section to load
+  await expect(page.getByText('Users')).toBeVisible();
+  
+  // Test filter functionality
+  const filterInput = page.locator('input[name="filterUser"]');
+  await filterInput.fill('test');
+  await page.locator('input[name="filterUser"]').locator('..').getByRole('button', { name: 'Submit' }).click();
+  
+  // Test pagination
+  const nextButton = page.locator('button:has-text("»")').nth(1);
+  if (await nextButton.isEnabled()) {
+    await nextButton.click();
+  }
+});
+
