@@ -48,9 +48,15 @@ jobs:
           coverage=$(jq '.total.lines.pct' coverage/coverage-summary.json)
           color=$(echo "$coverage < 80" | bc | awk '{if ($1) print "red"; else print "green"}')
           echo "Posting badge: coverage=$coverage color=$color"
-          http_code=$(curl -s -o /tmp/badge_resp -w "%{http_code}" -X POST "https://pizza-factory.cs329.click/api/badge/${{ secrets.NET_ID }}/jwtpizzacoverage?label=Coverage&value=$coverage%25&color=$color" -H "authorization: bearer ${{ secrets.FACTORY_API_KEY }}")
+          timestamp=$(date +%s)
+          http_code=$(curl -s -o /tmp/badge_resp -w "%{http_code}" -X POST "https://pizza-factory.cs329.click/api/badge/${{ secrets.NET_ID }}/jwtpizzacoverage?label=Coverage&value=$coverage%25&color=$color&t=$timestamp" -H "authorization: bearer ${{ secrets.FACTORY_API_KEY }}")
           echo "Badge response code: $http_code"
           echo "Badge response body:" && cat /tmp/badge_resp
+          
+          # Purge Camo cache to force badge update
+          echo "Purging Camo cache..."
+          camo_url="https://camo.githubusercontent.com/70583ca8901e630a9593c74adfbe0d64429eaf9e0df8f61e484dbca49b05750b/68747470733a2f2f70697a7a612d666163746f72792e63733332392e636c69636b2f6170692f62616467652f6c683539362f6a777470697a7a61636f7665726167653f743d313936"
+          curl -X PURGE "$camo_url" || echo "Camo purge failed (this is normal)"
   deploy:
     needs: build
     permissions:
